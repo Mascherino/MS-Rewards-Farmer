@@ -22,6 +22,7 @@ from src import (
     Account,
 )
 from src.browser import RemainingSearches
+from src.constants import DEFAULT_LOG_LEVEL
 from src.loggingColoredFormatter import ColoredFormatter
 from src.utils import Utils
 
@@ -105,8 +106,19 @@ def setupLogging():
             "disable_existing_loggers": True,
         }
     )
+    config = Utils.loadConfig()
+    invalid_log_level = False
+    if (level := config.get("logging", {}).get("level", "INFO")) not in [
+        "DEBUG",
+        "INFO",
+        "WARNING",
+        "ERROR",
+        "CRITICAL"
+    ]:
+        level = DEFAULT_LOG_LEVEL
+        invalid_log_level = True
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=level,
         format=_format,
         handlers=[
             handlers.TimedRotatingFileHandler(
@@ -119,6 +131,12 @@ def setupLogging():
             terminalHandler,
         ],
     )
+    if invalid_log_level:
+        logging.error(
+            "Invalid logging level specified. Valid values are "
+            "DEBUG, INFO, WARNING, ERROR and CRITICAL. The default level "
+            f"{DEFAULT_LOG_LEVEL} will be used."
+        )
 
 
 def argumentParser() -> argparse.Namespace:
